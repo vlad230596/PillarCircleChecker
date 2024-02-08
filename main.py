@@ -49,12 +49,17 @@ def process(path):
             contour[0][index] = (xSample.toRelative(), -ySample.toRelative())
             blank[size - y, x] = colors.Green
             index = index + 1
+
         halfSize = int(size / 2)
         cv2.line(blank, (halfSize, 0), (halfSize, size), colors.Blue, 1)
         cv2.line(blank, (0, halfSize), (size, halfSize), colors.Blue, 1)
 
         (x, y), radius = cv2.minEnclosingCircle(contour)
-        cv2.circle(blank, (int((x / 2 + 0.5) * size), int((y / 2 + 0.5) * size)), int(radius / 2 * size), colors.Red)
+        xPixel = int((x / 2 + 0.5) * size)
+        yPixel = int((y / 2 + 0.5) * size)
+        cv2.circle(blank, (xPixel, yPixel), int(radius / 2 * size), colors.Red)
+        cv2.circle(blank, (xPixel, yPixel), 1, colors.Red, thickness=1)
+        cv2.circle(blank, (xPixel, yPixel), int(size / 256), colors.Red, thickness=1)
         cv2.putText(blank, f'{reportPath}', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
         cv2.putText(blank, f'{sn}', (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
         cv2.putText(blank, f'x: {x:.2f} y: {y:.2f}', (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
