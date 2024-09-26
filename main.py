@@ -10,7 +10,6 @@ from typing import Final
 
 MaxSampleValue: Final[int] = 2048
 
-
 @dataclass
 class SampleValue:
     native: int = 0
@@ -64,6 +63,7 @@ def process(path):
         cv2.putText(blank, f'{sn}', (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
         cv2.putText(blank, f'x: {x:.2f} y: {y:.2f}', (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
         cv2.putText(blank, f'radius: {radius:.2f}', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
+        cv2.putText(blank, f'z: {alsDataList[0]["Sample"]["z"]/MaxSampleValue:.2f}', (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
 
         cv2.imshow('blank', blank)
         cv2.waitKey()
