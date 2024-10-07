@@ -1,6 +1,7 @@
 import cv2
 import glob
 import numpy as np
+import sys
 from dataclasses import dataclass
 
 from EniPy import colors
@@ -25,6 +26,29 @@ class SampleValue:
 
     def toPixel(self, size) -> int:
         return int(self.toAbsRelative() * size)
+
+class ResultView:
+    def __init__(self, value, expected, negative_tolerance, positive_tolerance):
+        self.value = value
+        self.expected = expected
+        self.negative_tolerance = negative_tolerance
+        self.positive_tolerance = positive_tolerance
+
+    def get_text_color(self):
+        if self.negative_tolerance is not None and self.expected - self.value > self.negative_tolerance:
+            return colors.Red
+        if self.positive_tolerance is not None and self.value - self.expected > self.positive_tolerance:
+            return colors.Red
+        return colors.Green
+
+
+class ResultExpectedView(ResultView):
+    def __init__(self, value, expected, tolerance=0.0):
+        ResultView.__init__(self, value, expected, tolerance, tolerance)
+
+class ResultMinView(ResultView):
+    def __init__(self, value, min_value):
+        ResultView.__init__(self, value, min_value, negative_tolerance=0, positive_tolerance=None)
 
 
 def process(path):
@@ -61,13 +85,28 @@ def process(path):
         cv2.circle(blank, (xPixel, yPixel), int(size / 256), colors.Red, thickness=1)
         cv2.putText(blank, f'{reportPath}', (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
         cv2.putText(blank, f'{sn}', (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
-        cv2.putText(blank, f'x: {x:.2f} y: {y:.2f}', (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
-        cv2.putText(blank, f'radius: {radius:.2f}', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
-        cv2.putText(blank, f'z: {alsDataList[0]["Sample"]["z"]/MaxSampleValue:.2f}', (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, colors.Magenta, 1)
+
+        r_x = ResultExpectedView(x, 0.0, 0.05)
+        r_y = ResultExpectedView(y, 0.0, 0.05)
+        r_radius = ResultMinView(radius, 0.5)
+        r_z = ResultExpectedView(alsDataList[0]["Sample"]["z"]/MaxSampleValue, 1.0, 0.01)
+
+        cv2.putText(blank, f'x: {r_x.value:.2f}', (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, r_x.get_text_color(), 1)
+        cv2.putText(blank, f'y: {r_y.value:.2f}', (90, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.5, r_y.get_text_color(), 1)
+
+        cv2.putText(blank, f'radius: {r_radius.value:.2f}', (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, r_radius.get_text_color(), 1)
+        cv2.putText(blank, f'z: {r_z.value:.2f}', (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.5, r_z.get_text_color(), 1)
 
         cv2.imshow('blank', blank)
-        cv2.waitKey()
+        k = cv2.waitKey()
+        if k == -1 or k == 27:
+            break
+
 
 
 if __name__ == '__main__':
-    process('./reports/')
+    path = './reports/'
+    if len(sys.argv) > 1:
+        path = sys.argv[1]
+
+    process(path)
